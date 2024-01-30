@@ -45,31 +45,19 @@ def is_no_repeat(val):
     return redis_cli.sadd('weipinhui:shop_type_list:filter', hashlib.md5(str(val).encode()).hexdigest())
 
 
-def open_db():
+def save_info(gene):
     db = pymongo.MongoClient(host='localhost', port=27017)
-    return db
-
-
-def save_info(db, info):
     collection = db['weipinhui']['shop_type_list']
-    if is_no_repeat(info):
-        collection.insert_one(info)
-        print('写入成功...')
-    else:
-        print(f'{info} 已采集...')
-
-
-def close_db(db):
+    for info in gene:
+        if is_no_repeat(info):
+            collection.insert_one(info)
+            print('写入成功...')
+        else:
+            print(f'{info} 已采集...')
     db.close()
 
 
 if __name__ == '__main__':
     now = time.time()
-
-    weipinhui_db = open_db()
-    for item in get_index_all_shop_page_rule_id_type():
-        print(item)
-        save_info(weipinhui_db, item)
-    close_db(weipinhui_db)
-
+    save_info(get_index_all_shop_page_rule_id_type())
     print(f'耗时:{time.time() - now:.2f}s')
