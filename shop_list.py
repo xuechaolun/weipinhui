@@ -12,7 +12,10 @@ from playwright.sync_api import sync_playwright
 def get_shop_type_list():
     cli = pymongo.MongoClient(host='localhost', port=27017)
     collection = cli['weipinhui']['shop_type_list']
-    shop_type_list = collection.find()
+    # 连接时间过长，游标会自动关闭，将no_cursor_timeout设置为True就不会自动关闭游标了，需要手动关闭
+    # shop_type_list = collection.find(no_cursor_timeout=True)
+    shop_type_list = [ite for ite in collection.find()]
+    cli.close()
     return shop_type_list
 
 
@@ -83,26 +86,30 @@ def get_shop_type_name_price(url):
                         break
 
 
-def is_no_crawl(val):
+def is_no_crawl(key, val):
     redis_cli = redis.Redis()
-    return redis_cli.sadd('weipinhui:shop_list:filter', hashlib.md5(str(val).encode()).hexdigest())
+    return redis_cli.sadd(key, hashlib.md5(str(val).encode()).hexdigest())
 
 
 def save_info(gene):
     mongo_cli = pymongo.MongoClient(host='localhost', port=27017)
     collection = mongo_cli['weipinhui']['shop_list']
     for info in gene:
-        if is_no_crawl(info):
+        if is_no_crawl('weipinhui:shop_list:filter', info):
             collection.insert_one(info)
             print('写入成功...')
         else:
             print('已经采集过了...')
+    mongo_cli.close()
 
 
 if __name__ == '__main__':
     now = time.time()
-    for item in get_shop_type_list():
+    for item in get_shop_type_list()[::-1]:
         print(item['shop_type_url'])
-        shop_list_gene = get_shop_type_name_price(item['shop_type_url'])
-        save_info(shop_list_gene)
+        if is_no_crawl('weipinhui:shop_type_list:filter', item):
+            shop_list_gene = get_shop_type_name_price(item['shop_type_url'])
+            save_info(shop_list_gene)
+        else:
+            print(f'{item} 已经采集过了...')
     print(f'耗时:{time.time() - now:.2f}s')
