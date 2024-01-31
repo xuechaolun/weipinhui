@@ -1,7 +1,6 @@
 # 2024/1/31 10:38
 import hashlib
 import random
-import re
 import time
 
 import pymongo
@@ -33,21 +32,21 @@ def get_shop_type_name_price(url):
 
                 elements = page.query_selector_all('//div[@id="J_wrap_pro_add"]/div')
                 for index, element in enumerate(elements):
-                    shop_url = element.query_selector('//a').get_attribute('href')
-                    name_element = element.query_selector('//a/div[2]/div[2]')
-                    price_element = element.query_selector('//a/div[2]/div[1]/div[1]/div[2]')
 
                     try:
+                        name_element = element.query_selector('//a/div[2]/div[2]')
                         name = name_element.text_content()
                     except Exception as e:
                         print(e)
                         name = None
                     try:
+                        price_element = element.query_selector('//a/div[2]/div[1]/div[1]/div[2]')
                         price = int(price_element.text_content().replace('¥', ''))
                     except Exception as e:
                         print(e)
                         price = None
                     try:
+                        shop_url = element.query_selector('//a').get_attribute('href')
                         shop_url = f'https:{shop_url}'
                     except Exception as e:
                         print(e)
@@ -60,7 +59,6 @@ def get_shop_type_name_price(url):
                         'shop_url': shop_url
                     }
 
-                # 翻页
                 # 获取总页数
                 tot = page.query_selector('//*[@id="J-pagingWrap"]/span[1]').text_content()
                 print(tot)
@@ -68,14 +66,19 @@ def get_shop_type_name_price(url):
                 if tot == f'共{count}页':
                     print(f'{page.url} 采集完毕...')
                     break
+
+                # 翻页
                 time.sleep(random.uniform(2.0, 3.0))
                 count += 1
                 print(f'正在采集第{count}页')
                 elements = page.query_selector_all('//*[@id="J-pagingWrap"]/a')
                 for element in elements:
                     print(element.text_content())
-                    if int(element.text_content()) == count:
-                        element.click()
+                    if element.text_content() == str(count):
+                        try:
+                            element.click()
+                        except Exception as e:
+                            print(e)
                         print(f'element.text_content():{element.text_content()}')
                         break
 
