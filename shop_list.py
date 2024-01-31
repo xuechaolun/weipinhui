@@ -1,8 +1,11 @@
 # 2024/1/31 10:38
+import hashlib
 import random
+import re
 import time
 
 import pymongo
+import redis
 
 from playwright.sync_api import sync_playwright
 
@@ -11,8 +14,6 @@ def get_shop_type_list():
     cli = pymongo.MongoClient(host='localhost', port=27017)
     collection = cli['weipinhui']['shop_type_list']
     shop_type_list = collection.find()
-    # for index, shop_type in enumerate(shop_type_list):
-    #     print(index+1, shop_type)
     return shop_type_list
 
 
@@ -21,30 +22,84 @@ def get_shop_type_name_price(url):
         with pwc.firefox.launch(headless=True) as browser:
             page = browser.new_page()
             page.goto(url)
-            # 向下滚动3次
-            for _ in range(3):
-                page.evaluate('window.scrollTo(0,document.body.scrollHeight)')
-                time.sleep(random.uniform(1.0, 2.0))
+            count = 1
+            print(f'正在采集第{count}页')
+            while True:
+                # 向下滚动3次
+                for _ in range(3):
+                    height = random.randint(10000, 20000)
+                    page.evaluate(f'window.scrollTo(0,{height})')
+                    time.sleep(random.uniform(2.0, 3.0))
 
-            elements = page.query_selector_all('//div[@id="J_wrap_pro_add"]/div')
-            for index, element in enumerate(elements):
-                shop_url = element.query_selector('//a').get_attribute('href')
-                name_element = element.query_selector('//a/div[2]/div[2]')
-                price_element = element.query_selector('//a/div[2]/div[1]/div[1]/div[2]')
-                print(index, name_element.text_content(), price_element.text_content(), f'https:{shop_url}')
-                # yield {
-                #     'name': name_element.text_content(),
-                #     'price': price_element.text_content(),
-                #     'shop_url': f'https:{shop_url}'
-                # }
+                elements = page.query_selector_all('//div[@id="J_wrap_pro_add"]/div')
+                for index, element in enumerate(elements):
+                    shop_url = element.query_selector('//a').get_attribute('href')
+                    name_element = element.query_selector('//a/div[2]/div[2]')
+                    price_element = element.query_selector('//a/div[2]/div[1]/div[1]/div[2]')
 
-            # 翻页
+                    try:
+                        name = name_element.text_content()
+                    except Exception as e:
+                        print(e)
+                        name = None
+                    try:
+                        price = int(price_element.text_content().replace('¥', ''))
+                    except Exception as e:
+                        print(e)
+                        price = None
+                    try:
+                        shop_url = f'https:{shop_url}'
+                    except Exception as e:
+                        print(e)
+                        shop_url = None
+
+                    print(index, name, price, shop_url)
+                    yield {
+                        'name': name,
+                        'price': price,
+                        'shop_url': shop_url
+                    }
+
+                # 翻页
+                # 获取总页数
+                tot = page.query_selector('//*[@id="J-pagingWrap"]/span[1]').text_content()
+                print(tot)
+                print()
+                if tot == f'共{count}页':
+                    print(f'{page.url} 采集完毕...')
+                    break
+                time.sleep(random.uniform(2.0, 3.0))
+                count += 1
+                print(f'正在采集第{count}页')
+                elements = page.query_selector_all('//*[@id="J-pagingWrap"]/a')
+                for element in elements:
+                    print(element.text_content())
+                    if int(element.text_content()) == count:
+                        element.click()
+                        print(f'element.text_content():{element.text_content()}')
+                        break
+
+
+def is_no_crawl(val):
+    redis_cli = redis.Redis()
+    return redis_cli.sadd('weipinhui:shop_list:filter', hashlib.md5(str(val).encode()).hexdigest())
+
+
+def save_info(gene):
+    mongo_cli = pymongo.MongoClient(host='localhost', port=27017)
+    collection = mongo_cli['weipinhui']['shop_list']
+    for info in gene:
+        if is_no_crawl(info):
+            collection.insert_one(info)
+            print('写入成功...')
+        else:
+            print('已经采集过了...')
 
 
 if __name__ == '__main__':
     now = time.time()
     for item in get_shop_type_list():
         print(item['shop_type_url'])
-        get_shop_type_name_price(item['shop_type_url'])
-        break
-    print(f'耗时:{time.time()-now:.2f}s')
+        shop_list_gene = get_shop_type_name_price(item['shop_type_url'])
+        save_info(shop_list_gene)
+    print(f'耗时:{time.time() - now:.2f}s')
