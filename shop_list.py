@@ -55,7 +55,7 @@ def get_shop_type_name_price(url):
                         print(e)
                         shop_url = None
 
-                    print(index, name, price, shop_url)
+                    # print(index, name, price, shop_url)
                     yield {
                         'name': name,
                         'price': price,
@@ -68,6 +68,8 @@ def get_shop_type_name_price(url):
                 print()
                 if tot == f'共{count}页':
                     print(f'{page.url} 采集完毕...')
+                    print()
+                    print()
                     break
 
                 # 翻页
@@ -82,7 +84,6 @@ def get_shop_type_name_price(url):
                             element.click()
                         except Exception as e:
                             print(e)
-                        print(f'element.text_content():{element.text_content()}')
                         break
 
 
@@ -105,8 +106,11 @@ def save_info(gene):
 
 if __name__ == '__main__':
     now = time.time()
-    for item in get_shop_type_list()[::-1]:
-        print(item['shop_type_url'])
+    shop_type_list = get_shop_type_list()
+    for _ in range(len(shop_type_list)):
+        item = random.choice(shop_type_list)
+        shop_type_list.remove(item)
+        print(item)
         if is_no_crawl('weipinhui:shop_type_list:filter', item):
             shop_list_gene = get_shop_type_name_price(item['shop_type_url'])
             save_info(shop_list_gene)
