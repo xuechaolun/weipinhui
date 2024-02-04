@@ -28,9 +28,9 @@ def get_shop_type_name_price(url):
             print(f'正在采集第{count}页')
             while True:
                 # 向下滚动3次
-                for _ in range(3):
-                    height = random.randint(10000, 20000)
-                    page.evaluate(f'window.scrollTo(0,{height})')
+                for i in range(3):
+                    height = random.randint(5000, 10000)
+                    page.evaluate(f'window.scrollTo(0,{height * (i + 1)})')
                     time.sleep(random.uniform(2.0, 3.0))
 
                 elements = page.query_selector_all('//div[@id="J_wrap_pro_add"]/div')
@@ -40,19 +40,19 @@ def get_shop_type_name_price(url):
                         name_element = element.query_selector('//a/div[2]/div[2]')
                         name = name_element.text_content()
                     except Exception as e:
-                        print(e)
+                        print(name, e)
                         name = None
                     try:
                         price_element = element.query_selector('//a/div[2]/div[1]/div[1]/div[2]')
                         price = int(price_element.text_content().replace('¥', ''))
                     except Exception as e:
-                        print(e)
+                        print(price, e)
                         price = None
                     try:
                         shop_url = element.query_selector('//a').get_attribute('href')
                         shop_url = f'https:{shop_url}'
                     except Exception as e:
-                        print(e)
+                        print(shop_url, e)
                         shop_url = None
 
                     # print(index, name, price, shop_url)
