@@ -29,7 +29,7 @@ def get_shop_type_name_price(url):
             while True:
                 # 向下滚动3次
                 for i in range(3):
-                    height = random.randint(5000, 10000)
+                    height = random.randint(2000, 7000)
                     page.evaluate(f'window.scrollTo(0,{height * (i + 1)})')
                     time.sleep(random.uniform(2.0, 3.0))
 
