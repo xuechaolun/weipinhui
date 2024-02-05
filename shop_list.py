@@ -40,20 +40,20 @@ def get_shop_type_name_price(url):
                         name_element = element.query_selector('//a/div[2]/div[2]')
                         name = name_element.text_content()
                     except Exception as e:
-                        print(name, e)
                         name = None
+                        print('name', e)
                     try:
                         price_element = element.query_selector('//a/div[2]/div[1]/div[1]/div[2]')
                         price = int(price_element.text_content().replace('¥', ''))
                     except Exception as e:
-                        print(price, e)
                         price = None
+                        print('price', e)
                     try:
                         shop_url = element.query_selector('//a').get_attribute('href')
                         shop_url = f'https:{shop_url}'
                     except Exception as e:
-                        print(shop_url, e)
                         shop_url = None
+                        print('shop_url', e)
 
                     # print(index, name, price, shop_url)
                     yield {
@@ -116,5 +116,4 @@ if __name__ == '__main__':
             save_info(shop_list_gene)
         else:
             print(f'{item} 已经采集过了...')
-
     print(f'耗时:{time.time() - now:.2f}s')
