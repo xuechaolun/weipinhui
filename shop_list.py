@@ -40,20 +40,20 @@ def get_shop_type_name_price(url):
                         name_element = element.query_selector('//a/div[2]/div[2]')
                         name = name_element.text_content()
                     except Exception as e:
-                        name = None
                         print('name', e)
+                        continue
                     try:
                         price_element = element.query_selector('//a/div[2]/div[1]/div[1]/div[2]')
                         price = int(price_element.text_content().replace('¥', ''))
                     except Exception as e:
-                        price = None
                         print('price', e)
+                        continue
                     try:
                         shop_url = element.query_selector('//a').get_attribute('href')
                         shop_url = f'https:{shop_url}'
                     except Exception as e:
-                        shop_url = None
                         print('shop_url', e)
+                        continue
 
                     # print(index, name, price, shop_url)
                     yield {
