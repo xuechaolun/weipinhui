@@ -11,7 +11,7 @@ from playwright.sync_api import sync_playwright
 
 def get_index_all_shop_page_rule_id_type():
     with sync_playwright() as pw:
-        browser = pw.firefox.launch(headless=True)
+        browser = pw.firefox.launch(headless=False)
         index_page = browser.new_page()
         index_page.goto('https://www.vip.com/')
         time.sleep(random.uniform(2.0, 3.0))
@@ -22,13 +22,10 @@ def get_index_all_shop_page_rule_id_type():
             # 在“商品分类”的9个子项中悬停取值
             index_page.locator(f"//*[@id=\"J_main_nav_category_menu\"]/li[{i + 1}]").hover()
             time.sleep(random.uniform(2.0, 3.0))
-            # index_page.screenshot(path=f'index-{i}.png', full_page=False)
             dl_elements = index_page.query_selector_all('//*[@id="J_main_nav_category_pop"]//dl')
             for dl in dl_elements:
                 a_elements = dl.query_selector_all('//dd/a')
                 for element in a_elements:
-                    # print(element.get_attribute('href'))
-                    # print(element.text_content())
                     base_urls = element.get_attribute('href').split('?')
                     rule_id = base_urls[1].split('&')[0]
                     shop_type_url = f'https:{base_urls[0]}?{rule_id}'
@@ -36,7 +33,6 @@ def get_index_all_shop_page_rule_id_type():
                         'shop_type_url': shop_type_url,
                         'shop_type_name': element.text_content()
                     }
-
         browser.close()
 
 

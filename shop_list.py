@@ -14,9 +14,9 @@ def get_shop_type_list():
     collection = cli['weipinhui']['shop_type_list']
     # 连接时间过长，游标会自动关闭，将no_cursor_timeout设置为True就不会自动关闭游标了，需要手动关闭
     # shop_type_list = collection.find(no_cursor_timeout=True)
-    shop_type_list = [ite for ite in collection.find()]
+    st_list = [ite for ite in collection.find()]
     cli.close()
-    return shop_type_list
+    return st_list
 
 
 def get_shop_type_name_price(url):
@@ -107,19 +107,14 @@ def save_info(gene):
 if __name__ == '__main__':
     now = time.time()
     shop_type_list = get_shop_type_list()
-    # for _ in range(len(shop_type_list)):
-    #     item = random.choice(shop_type_list)
-    #     shop_type_list.remove(item)
-    #     print(item)
-    #     if is_no_crawl('weipinhui:shop_type_list:filter', item):
-    #         shop_list_gene = get_shop_type_name_price(item['shop_type_url'])
-    #         save_info(shop_list_gene)
-    #     else:
-    #         print(f'{item} 已经采集过了...')
-
-    for shop_type in shop_type_list:
-        print(shop_type['shop_type_name'])
-        shop_list_gene = get_shop_type_name_price(shop_type['shop_type_url'])
-        save_info(shop_list_gene)
+    for _ in range(len(shop_type_list)):
+        item = random.choice(shop_type_list)
+        shop_type_list.remove(item)
+        print(item)
+        if is_no_crawl('weipinhui:shop_type_detail:filter', item):
+            shop_list_gene = get_shop_type_name_price(item['shop_type_url'])
+            save_info(shop_list_gene)
+        else:
+            print(f'{item} 已经采集过了...')
 
     print(f'耗时:{time.time() - now:.2f}s')
