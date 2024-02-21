@@ -21,7 +21,7 @@ def get_shop_type_list():
 
 def get_shop_type_name_price(url):
     with sync_playwright() as pwc:
-        with pwc.firefox.launch(headless=True) as browser:
+        with pwc.firefox.launch(headless=True, args=['--disable-blink-features=AutomationControlled']) as browser:
             page = browser.new_page()
             page.goto(url)
             count = 1
