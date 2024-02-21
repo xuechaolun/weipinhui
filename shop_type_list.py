@@ -11,7 +11,7 @@ from playwright.sync_api import sync_playwright
 
 def get_index_all_shop_page_rule_id_type():
     with sync_playwright() as pw:
-        browser = pw.firefox.launch(headless=False)
+        browser = pw.firefox.launch(headless=False, args=['--disable-blink-features=AutomationControlled'])
         index_page = browser.new_page()
         index_page.goto('https://www.vip.com/')
         time.sleep(random.uniform(2.0, 3.0))
